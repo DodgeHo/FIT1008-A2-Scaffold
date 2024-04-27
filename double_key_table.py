@@ -8,6 +8,110 @@ K1 = TypeVar('K1')
 K2 = TypeVar('K2')
 V = TypeVar('V')
 
+class K1K2LinkList(Iterator[K1|K2]):
+    '''A list only designed for search K1/K2 type'''
+
+    def __init__ (self, table : DoubleKeyTable , key : K1|None = None) -> None :
+        self.table = table
+        self.iterated_key = key
+        self.index_position = 0
+
+    def __iter__(self) -> Iterator[K1|K2]:
+        return self
+
+    def __next__(self) -> K1|K2:
+
+        if self.iterated_key == None:
+            temp_key = self.find_key(self.table.array)
+            if temp_key != None:
+                return temp_key
+            raise StopIteration
+        
+        else:
+            inner_table = None
+            for item in self.table.array:
+                if item != None:
+                    key_item, inner_table_item = item
+                    if self.iterated_key == key_item:
+                        inner_table = inner_table_item
+            if inner_table != None:
+                temp_key = self.find_key(inner_table.array)
+                if temp_key != None:
+                    return temp_key
+            raise StopIteration
+
+
+    def find_key(self, array : ArrayR) -> K1|K2:
+
+
+        for _ in range (self.index_position, len(array)):
+
+            if array[self.index_position] != None:
+                key_item = array[self.index_position][0]
+                self.index_position += 1
+                return key_item
+
+            self.index_position += 1
+
+        return None
+class VLinkList(Iterator[V]):
+
+    def __init__ (self, table : DoubleKeyTable , key : K1|None = None) -> None :
+
+
+
+        self.table = table
+        self.iterated_key = key
+        self.index_position = 0
+        self.inner_index_position = 0
+
+    def __iter__(self) -> Iterator[V]:
+
+
+        return self
+
+    def __next__(self) -> V:
+
+        if self.iterated_key == None:
+
+            for _ in range (self.index_position, len(self.table.array)):
+                if self.table.array[self.index_position] != None:
+                    inner_table = self.table.array[self.index_position][1]
+
+                    temp_value = self.find_value(inner_table.array)
+                    if temp_value != None:
+                        return temp_value
+                        
+                self.index_position += 1
+                self.inner_index_position = 0
+            
+        else:
+            inner_table = None
+
+            for item in self.table.array:
+                if item != None:
+                    if self.iterated_key == item[0]:
+                        inner_table = item[1]
+
+            if inner_table != None:
+                temp_value = self.find_value(inner_table.array)
+                if temp_value != None:
+                    return temp_value
+
+        raise StopIteration
+
+
+    def find_value(self, array : ArrayR) -> V:
+
+        for _ in range (self.inner_index_position, len(array)):
+            if array[self.inner_index_position] != None:
+                value_item = array[self.inner_index_position][1]
+                self.inner_index_position += 1
+                return value_item
+                
+            self.inner_index_position += 1
+        
+        return None
 
 class DoubleKeyTable(Generic[K1, K2, V]):
     """
@@ -115,7 +219,7 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         key = k:
             Returns an iterator of all keys in the bottom-hash-table for k.
         """
-        return KeyIterator(self, key) 
+        return K1K2LinkList(self, key) 
 
 
     def iter_values(self, key: K1 | None = None) -> Iterator[V]:
@@ -126,7 +230,7 @@ class DoubleKeyTable(Generic[K1, K2, V]):
             Returns an iterator of all values in the bottom-hash-table for k.
         """
 
-        return ValueIterator(self, key) 
+        return VLinkList(self, key) 
 
     def keys(self, key: K1 | None = None) -> list[K1 | K2]:
         """
@@ -283,119 +387,6 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         return result
 
 
-
-class KeyIterator(Iterator[K1|K2]):
-
-    def __init__ (self, outer_table : DoubleKeyTable , key : K1|None = None) -> None :
-
-        self.table = outer_table
-        self.iterated_key = key
-        self.index_position = 0
-        
-
-    def __iter__(self) -> Iterator[K1|K2]:
-        return self
-
-    def __next__(self) -> K1|K2:
-
-        if self.iterated_key == None:
-            temp_key = self.find_key(self.table.array)
-            if temp_key != None:
-                return temp_key
-            
-            raise StopIteration
-        
-        else:
-            inner_table = None
-
-            for item in self.table.array:
-                if item != None:
-                    key_item, inner_table_item = item
-                    if self.iterated_key == key_item:
-                        inner_table = inner_table_item
-
-            if inner_table != None:
-                temp_key = self.find_key(inner_table.array)
-                if temp_key != None:
-                    return temp_key
-
-            raise StopIteration
-
-
-    def find_key(self, array : ArrayR) -> K1|K2:
-
-
-        for _ in range (self.index_position, len(array)):
-
-            if array[self.index_position] != None:
-                key_item = array[self.index_position][0]
-                self.index_position += 1
-                return key_item
-
-            self.index_position += 1
-
-        return None
-
-
-
-class ValueIterator(Iterator[V]):
-
-    def __init__ (self, outer_table : DoubleKeyTable , key : K1|None = None) -> None :
-
-
-
-        self.table = outer_table
-        self.iterated_key = key
-        self.index_position = 0
-        self.inner_index_position = 0
-
-    def __iter__(self) -> Iterator[V]:
-
-
-        return self
-
-    def __next__(self) -> V:
-
-        if self.iterated_key == None:
-
-            for _ in range (self.index_position, len(self.table.array)):
-                if self.table.array[self.index_position] != None:
-                    inner_table = self.table.array[self.index_position][1]
-
-                    temp_value = self.find_value(inner_table.array)
-                    if temp_value != None:
-                        return temp_value
-                        
-                self.index_position += 1
-                self.inner_index_position = 0
-            
-        else:
-            inner_table = None
-
-            for item in self.table.array:
-                if item != None:
-                    if self.iterated_key == item[0]:
-                        inner_table = item[1]
-
-            if inner_table != None:
-                temp_value = self.find_value(inner_table.array)
-                if temp_value != None:
-                    return temp_value
-
-        raise StopIteration
-
-
-    def find_value(self, array : ArrayR) -> V:
-
-        for _ in range (self.inner_index_position, len(array)):
-            if array[self.inner_index_position] != None:
-                value_item = array[self.inner_index_position][1]
-                self.inner_index_position += 1
-                return value_item
-                
-            self.inner_index_position += 1
-        
-        return None
 
 
 
