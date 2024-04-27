@@ -28,57 +28,46 @@ class K1K2LinkList(Iterator[K1|K2]):
             raise StopIteration
         
         else:
-            inner_table = None
+            sub_table = None
             for item in self.table.array:
                 if item != None:
                     key_item, inner_table_item = item
                     if self.iterated_key == key_item:
-                        inner_table = inner_table_item
-            if inner_table != None:
-                temp_key = self.find_key(inner_table.array)
+                        sub_table = inner_table_item
+            if sub_table != None:
+                temp_key = self.find_key(sub_table.array)
                 if temp_key != None:
                     return temp_key
             raise StopIteration
 
 
     def find_key(self, array : ArrayR) -> K1|K2:
-
-
-        for _ in range (self.index_position, len(array)):
-
+        for i in range (self.index_position, len(array)):
             if array[self.index_position] != None:
                 key_item = array[self.index_position][0]
                 self.index_position += 1
                 return key_item
-
             self.index_position += 1
-
         return None
+    
 class VLinkList(Iterator[V]):
+    '''A list only designed for search V type'''
 
     def __init__ (self, table : DoubleKeyTable , key : K1|None = None) -> None :
-
-
-
         self.table = table
         self.iterated_key = key
         self.index_position = 0
         self.inner_index_position = 0
 
     def __iter__(self) -> Iterator[V]:
-
-
         return self
 
     def __next__(self) -> V:
-
         if self.iterated_key == None:
-
-            for _ in range (self.index_position, len(self.table.array)):
+            for i in range (self.index_position, len(self.table.array)):
                 if self.table.array[self.index_position] != None:
-                    inner_table = self.table.array[self.index_position][1]
-
-                    temp_value = self.find_value(inner_table.array)
+                    sub_table = self.table.array[self.index_position][1]
+                    temp_value = self.find_value(sub_table.array)
                     if temp_value != None:
                         return temp_value
                         
@@ -86,31 +75,24 @@ class VLinkList(Iterator[V]):
                 self.inner_index_position = 0
             
         else:
-            inner_table = None
-
+            sub_table = None
             for item in self.table.array:
                 if item != None:
                     if self.iterated_key == item[0]:
-                        inner_table = item[1]
-
-            if inner_table != None:
-                temp_value = self.find_value(inner_table.array)
+                        sub_table = item[1]
+            if sub_table != None:
+                temp_value = self.find_value(sub_table.array)
                 if temp_value != None:
                     return temp_value
-
         raise StopIteration
 
-
     def find_value(self, array : ArrayR) -> V:
-
-        for _ in range (self.inner_index_position, len(array)):
+        for i in range (self.inner_index_position, len(array)):
             if array[self.inner_index_position] != None:
                 value_item = array[self.inner_index_position][1]
                 self.inner_index_position += 1
-                return value_item
-                
+                return value_item  
             self.inner_index_position += 1
-        
         return None
 
 class DoubleKeyTable(Generic[K1, K2, V]):
@@ -297,10 +279,10 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         """
         Set an (key, value) pair in our hash table.
         """
-
-        position1, _ = self._linear_probe(key1 = key[0], key2 = key[1], is_insert = True)
-        inner_table : LinearProbeTable[K2,V] = self.array[position1][1]
-        inner_table[key[1]] = data
+        key1, key2 = key
+        position1, position2 = self._linear_probe(key1, key2, True)
+        sub_table : LinearProbeTable[K2,V] = self.array[position1][1]
+        sub_table[key2] = data
 
         if len(self) > self.table_size / 2:
             self._rehash()
@@ -386,8 +368,3 @@ class DoubleKeyTable(Generic[K1, K2, V]):
                     result += str (k1) + str(k2) + str(v) + str("\n")
         return result
 
-
-
-
-
-        
